@@ -8,11 +8,8 @@ Or you can just Webhook.quick_post('Your message') without bothering with Messag
 """
 
 import json
-import httplib
+import http.client
 import urllib
-
-from urlparse import urlparse
-
 
 class WebhookError(Exception):
     """Raised when Rocket.Chat server responses with non-JSON or with an explicit error."""
@@ -46,7 +43,7 @@ class Webhook(object):
         server_url should be a valid URL starting with scheme.
         token is a token given by a Rocket.Chat server.
         """
-        parsed = urlparse(server_url)
+        parsed = urllib.parse.urlparse(server_url)
         self.scheme = parsed.scheme
         if parsed.netloc:
             self.server_fqdn = parsed.netloc
@@ -76,13 +73,13 @@ class Webhook(object):
             payload_dict['icon_url'] = message.icon_url
         if message.attachments:
             payload_dict['attachments'] = message.attachments
-        payload = 'payload=' + urllib.quote_plus(json.dumps(payload_dict))
+        payload = 'payload=' + urllib.parse.quote_plus(json.dumps(payload_dict))
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
         if self.scheme == 'https':
-            conn = httplib.HTTPSConnection(self.server_fqdn)
+            conn = http.client.HTTPSConnection(self.server_fqdn)
         else:
-            conn = httplib.HTTPConnection(self.server_fqdn)
+            conn = http.client.HTTPConnection(self.server_fqdn)
         conn.request('POST', '/hooks/' + self.token, payload, headers)
         response = conn.getresponse()
         status = response.status
